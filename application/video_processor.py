@@ -1,14 +1,16 @@
 from pathlib import Path
 import cv2
 from application.vehicle_analyzer import VehicleAnalyzer
+from domain.ports import IReportExporter
 from presentation.frame_annotator import FrameAnnotator
 from config import get_settings
 
 
 class VideoProcessor:
-    def __init__(self, analyzer: VehicleAnalyzer, annotator: FrameAnnotator):
+    def __init__(self, analyzer: VehicleAnalyzer, annotator: FrameAnnotator, exporter: IReportExporter):
         self._analyzer = analyzer
         self._annotator = annotator
+        self._exporter = exporter
         self._frame_interval = get_settings().video_frame_interval
 
     def process(self, video_path: Path, output_dir: Path) -> Path:
@@ -22,6 +24,7 @@ class VideoProcessor:
 
         frame_idx = 0
         last_analyses = []
+        all_records = []
 
         print(f"\n▶ {video_path.name}")
         try:
@@ -32,7 +35,10 @@ class VideoProcessor:
 
                 if frame_idx % self._frame_interval == 0:
                     try:
-                        last_analyses = self._analyzer.analyze_frame(frame)
+                        last_analyses = self._analyzer.analyze_frame(
+                            frame, frame_idx, video_path.name
+                        )
+                        all_records.extend(last_analyses)
                         for a in last_analyses:
                             print(f"  frame {frame_idx}: {a}")
                     except Exception as e:
@@ -44,7 +50,11 @@ class VideoProcessor:
             cap.release()
             writer.release()
 
-        print(f"✔ Salvo: {out_path}")
+        print(f"✔ Vídeo: {out_path}")
+
+        if all_records:
+            self._exporter.export(all_records, output_dir, video_path.stem)
+
         return out_path
 
     @staticmethod

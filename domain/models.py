@@ -22,6 +22,8 @@ class VehicleAnalysis:
     ano_estimado: Optional[str]
     cor: Optional[str]
     placa: Optional[str]
+    frame: int = 0
+    video: str = ""
 
     def __str__(self) -> str:
         return (
@@ -29,3 +31,17 @@ class VehicleAnalysis:
             f"{self.marca or '?'} {self.modelo or '?'} {self.ano_estimado or '?'} | "
             f"Cor: {self.cor or '?'} | Placa: {self.placa or '-'}"
         )
+
+    def to_dict(self) -> dict:
+        return {
+            "video": self.video,
+            "frame": self.frame,
+            "categoria": self.category,
+            "confianca": round(self.confidence, 4),
+            "marca": self.marca,
+            "modelo": self.modelo,
+            "ano_estimado": self.ano_estimado,
+            "cor": self.cor,
+            "placa": self.placa,
+            "bbox": list(self.bbox),
+        }

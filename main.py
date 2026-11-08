@@ -5,6 +5,9 @@ from config import get_settings
 from infrastructure.detection.yolo_detector import YoloDetector
 from infrastructure.ocr.easyocr_reader import EasyOcrReader
 from infrastructure.vlm.factory import create_vlm_agent
+from infrastructure.export.json_exporter import JsonExporter
+from infrastructure.export.xlsx_exporter import XlsxExporter
+from infrastructure.export.composite_exporter import CompositeExporter
 from application.vehicle_analyzer import VehicleAnalyzer
 from application.video_processor import VideoProcessor
 from presentation.frame_annotator import FrameAnnotator
@@ -19,7 +22,8 @@ def build_processor() -> VideoProcessor:
     vlm = create_vlm_agent()
     analyzer = VehicleAnalyzer(detector, ocr, vlm)
     annotator = FrameAnnotator()
-    return VideoProcessor(analyzer, annotator)
+    exporter = CompositeExporter([JsonExporter(), XlsxExporter()])
+    return VideoProcessor(analyzer, annotator, exporter)
 
 
 def resolve_videos(args: list[str]) -> list[Path]:

@@ -8,11 +8,11 @@ class VehicleAnalyzer:
         self._ocr = ocr
         self._vlm = vlm
 
-    def analyze_frame(self, frame) -> list[VehicleAnalysis]:
+    def analyze_frame(self, frame, frame_idx: int = 0, video: str = "") -> list[VehicleAnalysis]:
         detections = self._detector.detect(frame)
-        return [self._analyze_detection(d) for d in detections]
+        return [self._analyze_detection(d, frame_idx, video) for d in detections]
 
-    def _analyze_detection(self, detection: Detection) -> VehicleAnalysis:
+    def _analyze_detection(self, detection: Detection, frame_idx: int, video: str) -> VehicleAnalysis:
         vlm_result = self._vlm.analyze(detection.crop)
         plate = self._ocr.extract_plate(detection.crop)
 
@@ -25,4 +25,6 @@ class VehicleAnalyzer:
             ano_estimado=vlm_result.get("ano_estimado"),
             cor=vlm_result.get("cor"),
             placa=plate,
+            frame=frame_idx,
+            video=video,
         )
