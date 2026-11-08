@@ -13,6 +13,7 @@ PROMPT = (
 )
 
 _EMPTY = {"marca": None, "modelo": None, "ano_estimado": None, "cor": None, "placa": None}
+_STR_KEYS = {"marca", "modelo", "ano_estimado", "cor", "placa"}
 
 
 class BaseVlmAgent(IVlmAgent):
@@ -23,6 +24,26 @@ class BaseVlmAgent(IVlmAgent):
     def parse_response(self, text: str) -> dict:
         try:
             start, end = text.find("{"), text.rfind("}") + 1
-            return json.loads(text[start:end])
+            raw = json.loads(text[start:end])
+            return self._sanitize(raw)
         except Exception:
             return _EMPTY.copy()
+
+    @staticmethod
+    def _sanitize(data: dict) -> dict:
+        """Garante que todos os campos de texto sejam str ou None."""
+        result = _EMPTY.copy()
+        for key in _STR_KEYS:
+            val = data.get(key)
+            if val is None:
+                result[key] = None
+            elif isinstance(val, dict):
+                # VLM retornou objeto — pega o primeiro valor string
+                result[key] = next((str(v) for v in val.values() if v), None)
+            elif isinstance(val, list):
+                result[key] = ", ".join(str(v) for v in val if v) or None
+            else:
+                cleaned = str(val).strip()
+                # descarta frases longas como "Não é possível ver a placa"
+                result[key] = cleaned if len(cleaned) <= 30 else None
+        return result
