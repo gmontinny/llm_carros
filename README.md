@@ -29,8 +29,8 @@ O projeto funciona nas duas configurações. Basta ajustar `HF_DEVICE` no `.env`
 #### Instalação do PyTorch com GPU
 
 ```bash
-# GPU NVIDIA (CUDA 12.1)
-pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+# GPU NVIDIA (CUDA 12.4) — recomendado
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124
 
 # CPU (qualquer máquina)
 pip install torch torchvision
