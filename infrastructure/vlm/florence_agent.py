@@ -21,10 +21,11 @@ class FlorenceAgent(BaseVlmAgent):
     def __init__(self):
         device = get_settings().device
         self._device = device
+        self._dtype = torch.float16 if device == "cuda" else torch.float32
         self._processor = AutoProcessor.from_pretrained(_MODEL_ID, trust_remote_code=True)
         self._model = AutoModelForCausalLM.from_pretrained(
             _MODEL_ID,
-            torch_dtype=torch.float16 if device == "cuda" else torch.float32,
+            torch_dtype=self._dtype,
             trust_remote_code=True,
         ).to(device)
         self._model.eval()
@@ -33,7 +34,7 @@ class FlorenceAgent(BaseVlmAgent):
         pil = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
         inputs = self._processor(
             text=_PROMPT, images=pil, return_tensors="pt"
-        ).to(self._device)
+        ).to(self._device, self._dtype)
 
         with torch.no_grad():
             output_ids = self._model.generate(

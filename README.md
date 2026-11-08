@@ -80,10 +80,10 @@ GEMINI_API_KEY=<sua_chave_gemini>
 LLAMA_MODEL=llava
 LLAMA_BASE_URL=http://localhost:11434
 
-# Detecção
-YOLO_MODEL=yolov8n.pt
-CONFIDENCE_THRESHOLD=0.4
-VIDEO_FRAME_INTERVAL=30
+# Detecção — ajuste conforme o tipo de vídeo
+YOLO_MODEL=yolov8s.pt
+CONFIDENCE_THRESHOLD=0.25
+VIDEO_FRAME_INTERVAL=15
 
 # Hugging Face — device para modelos locais (cpu | cuda)
 HF_DEVICE=cpu
@@ -95,16 +95,24 @@ HF_DEVICE=cpu
 | `VLM_OPENAI_MODEL`     | Modelo OpenAI                                              | `gpt-4o`         |
 | `VLM_GEMINI_MODEL`     | Modelo Gemini                                              | `gemini-2.5-pro` |
 | `LLAMA_MODEL`          | Modelo Ollama local                                        | `llava`          |
-| `YOLO_MODEL`           | Peso YOLOv8 (`yolov8n.pt`, `yolov8s.pt`, etc.)            | `yolov8n.pt`     |
-| `CONFIDENCE_THRESHOLD` | Confiança mínima para detecção (0.0–1.0)                   | `0.4`            |
-| `VIDEO_FRAME_INTERVAL` | Intervalo de frames entre análises VLM                     | `30`             |
+| `YOLO_MODEL`           | Peso YOLOv8 (`yolov8s.pt`, `yolov8m.pt`, etc.)            | `yolov8s.pt`     |
+| `CONFIDENCE_THRESHOLD` | Confiança mínima para detecção (0.0–1.0)                   | `0.25`           |
+| `VIDEO_FRAME_INTERVAL` | Intervalo de frames entre análises VLM                     | `15`             |
 | `HF_DEVICE`            | Device para modelos Hugging Face (`cpu` ou `cuda`)         | `cpu`            |
+
+### Configuração recomendada por tipo de vídeo
+
+| Tipo de vídeo | `YOLO_MODEL` | `CONFIDENCE_THRESHOLD` | `VIDEO_FRAME_INTERVAL` |
+|---|---|---|---|
+| Câmera de trânsito / monitoramento | `yolov8s.pt` ou `yolov8m.pt` | `0.25` | `15` |
+| Vídeo próximo / estúdio | `yolov8n.pt` | `0.4` | `30` |
+| Alta resolução 4K | `yolov8m.pt` | `0.25` | `15` |
 
 ---
 
 ## Uso
 
-Coloque os vídeos `.mp4` na pasta `videos/` e execute:
+Coloque os vídeos na pasta `videos/` e execute:
 
 ```bash
 # Processar todos os vídeos
@@ -114,14 +122,18 @@ python main.py
 python main.py 11607470
 ```
 
+Formatos suportados: `.mp4`, `.mov`, `.mts`, `.avi`, `.mkv`
+
 ### Saída gerada em `output/` para cada vídeo
 
 ```
 output/
-├── <nome>_annotated.mp4   ← vídeo com bboxes e labels desenhados
-├── <nome>_report.json     ← todas as detecções em JSON
-└── <nome>_report.xlsx     ← planilha formatada com todas as detecções
+├── <nome>_annotated.mp4          ← vídeo com bboxes e labels desenhados
+├── <nome>_<provider>_report.json ← todas as detecções em JSON
+└── <nome>_<provider>_report.xlsx ← planilha formatada com todas as detecções
 ```
+
+> O nome do provider é incluído no arquivo para evitar sobrescrita ao comparar agentes diferentes.
 
 ### Exemplo de registro JSON
 
@@ -152,6 +164,49 @@ Colunas: `Video`, `Frame`, `Agente`, `Categoria`, `Confiança`, `Marca`, `Modelo
 
 ---
 
+## Agentes VLM — Comparativo e Recomendações
+
+### Tabela comparativa
+
+| Provider | Modelo | Qualidade p/ veículos | Requer chave | Roda local | Recomendado |
+|----------|--------|-----------------------|-------------|------------|-------------|
+| `openai` | GPT-4o | ⭐⭐⭐⭐⭐ Excelente | Sim | Não | ✅ Melhor opção |
+| `gemini` | Gemini 2.5 Pro | ⭐⭐⭐⭐⭐ Excelente | Sim | Não | ✅ Ótima opção |
+| `llama` | LLaVA 13B/34B | ⭐⭐⭐⭐ Boa | Não | Sim | ✅ Melhor local |
+| `llama` | LLaVA 7B | ⭐⭐⭐ Média | Não | Sim | ⚠️ Aceitável |
+| `florence` | Florence-2-large | ⭐⭐ Fraca | Não | Sim | ❌ Não recomendado |
+
+### Por que o Florence-2 não é recomendado para este projeto
+
+O Florence-2 é um modelo de visão geral da Microsoft, projetado para tarefas como legendagem de imagens, detecção de objetos genéricos e OCR de documentos. **Não foi treinado para identificação específica de veículos**, resultando em:
+
+- Identificação incorreta ou genérica de marca e modelo
+- Baixa taxa de leitura de placas veiculares
+- Respostas fora do formato JSON esperado com frequência
+- Desempenho especialmente ruim em vídeos de câmeras de trânsito (veículos distantes, ângulos oblíquos)
+
+> **Recomendação:** use Florence-2 apenas como último recurso em ambientes sem acesso à internet e sem GPU suficiente para LLaVA. Para qualidade de produção, prefira GPT-4o ou Gemini.
+
+### Usando LLaVA com modelos maiores (recomendado para uso local)
+
+Com a RTX 3060 12GB é possível rodar modelos maiores e muito mais precisos:
+
+```bash
+# Modelo 13B — boa qualidade, cabe em 12GB VRAM
+ollama pull llava:13b
+
+# Modelo 34B — melhor qualidade local (requer ~20GB VRAM)
+ollama pull llava:34b
+```
+
+Ajuste no `.env`:
+```env
+VLM_PROVIDER=llama
+LLAMA_MODEL=llava:13b
+```
+
+---
+
 ## Arquitetura
 
 O projeto segue arquitetura em camadas com separação de responsabilidades e inversão de dependência (portas e adaptadores).
@@ -167,16 +222,16 @@ llm_carros/
 │
 ├── infrastructure/                          ← Implementações concretas das interfaces
 │   ├── detection/
-│   │   └── yolo_detector.py                 ← IDetector via YOLOv8 (COCO)
+│   │   └── yolo_detector.py                 ← IDetector via YOLOv8 (COCO) com imgsz=1280
 │   ├── ocr/
 │   │   ├── easyocr_reader.py                ← IOcrReader via EasyOCR puro (fallback)
 │   │   └── yolos_plate_reader.py            ← IOcrReader via YOLOS (HF) + EasyOCR + pré-processamento
 │   ├── vlm/
 │   │   ├── base.py                          ← Encode de imagem e parse de JSON compartilhados
 │   │   ├── openai_agent.py                  ← IVlmAgent via GPT-4o
-│   │   ├── gemini_agent.py                  ← IVlmAgent via Gemini
+│   │   ├── gemini_agent.py                  ← IVlmAgent via Gemini (google-genai SDK)
 │   │   ├── llama_agent.py                   ← IVlmAgent via Ollama (LLaVA)
-│   │   ├── florence_agent.py                ← IVlmAgent via Florence-2 (HF) — local, sem API key
+│   │   ├── florence_agent.py                ← IVlmAgent via Florence-2 (HF) — não recomendado
 │   │   └── factory.py                       ← Cria o agente conforme VLM_PROVIDER
 │   └── export/
 │       ├── json_exporter.py                 ← IReportExporter → arquivo .json
@@ -216,15 +271,6 @@ A detecção de placas usa três fontes em cascata:
 | YOLOS (HF) | `nickmuchi/yolos-small-finetuned-license-plate-detection` detecta bbox exato da placa | 1ª |
 | EasyOCR | Faixa inferior do crop → escala → `bilateralFilter` → `adaptiveThreshold` → regex | 2ª |
 | VLM (agente) | Placa solicitada diretamente no prompt — modelo visual lê da imagem | Fallback |
-
-### Agentes VLM disponíveis
-
-| Provider | Modelo | Requer chave | Roda local |
-|----------|--------|-------------|------------|
-| `openai` | GPT-4o | Sim | Não |
-| `gemini` | Gemini 2.5 Pro | Sim | Não |
-| `llama` | LLaVA via Ollama | Não | Sim |
-| `florence` | Florence-2-large (HF) | Não | Sim |
 
 ### Decisões de design
 
