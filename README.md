@@ -108,6 +108,21 @@ HF_DEVICE=cpu
 | Vídeo próximo / estúdio | `yolov8n.pt` | `0.4` | `30` |
 | Alta resolução 4K | `yolov8m.pt` | `0.25` | `15` |
 
+### Configuração recomendada por agente VLM
+
+O `VIDEO_FRAME_INTERVAL` deve ser ajustado conforme o agente usado, pois o tempo de resposta varia muito:
+
+| Agente | Tempo/detecção | `VIDEO_FRAME_INTERVAL` recomendado |
+|--------|---------------|------------------------------------|
+| `openai` (GPT-4o) | ~1–2s (API) | `15` |
+| `gemini` (Gemini 2.5 Pro) | ~1–2s (API) | `15` |
+| `llama` LLaVA 7B | ~3–8s (local) | `30` |
+| `llama` LLaVA 13B | ~8–15s (local) | `45` |
+| `llama` LLaVA 34B | ~20–40s (local) | `60` |
+| `florence` | ~380ms GPU / ~4s CPU | `15` (GPU) / `60` (CPU) |
+
+> Com múltiplos veículos por frame o tempo multiplica — ex: 4 carros × 8s = 32s por frame analisado com LLaVA 7B. Aumente o `VIDEO_FRAME_INTERVAL` para compensar.
+
 ---
 
 ## Uso
