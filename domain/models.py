@@ -22,6 +22,7 @@ class VehicleAnalysis:
     ano_estimado: Optional[str]
     cor: Optional[str]
     placa: Optional[str]
+    agente: str = ""
     frame: int = 0
     video: str = ""
 
@@ -36,6 +37,7 @@ class VehicleAnalysis:
         return {
             "video": self.video,
             "frame": self.frame,
+            "agente": self.agente,
             "categoria": self.category,
             "confianca": round(self.confidence, 4),
             "marca": self.marca,

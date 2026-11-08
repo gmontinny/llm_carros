@@ -53,7 +53,9 @@ class VideoProcessor:
         print(f"✔ Vídeo: {out_path}")
 
         if all_records:
-            self._exporter.export(all_records, output_dir, video_path.stem)
+            provider = get_settings().vlm_provider.lower()
+            export_stem = f"{video_path.stem}_{provider}"
+            self._exporter.export(all_records, output_dir, export_stem)
 
         return out_path
 

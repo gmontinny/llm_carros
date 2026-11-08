@@ -5,7 +5,7 @@ from openpyxl.utils import get_column_letter
 from domain.models import VehicleAnalysis
 from domain.ports import IReportExporter
 
-_HEADERS = ["Video", "Frame", "Categoria", "Confiança", "Marca", "Modelo", "Ano", "Cor", "Placa", "BBox"]
+_HEADERS = ["Video", "Frame", "Agente", "Categoria", "Confiança", "Marca", "Modelo", "Ano", "Cor", "Placa", "BBox"]
 _HEADER_FILL = PatternFill("solid", fgColor="1F4E79")
 _HEADER_FONT = Font(bold=True, color="FFFFFF")
 
@@ -21,7 +21,7 @@ class XlsxExporter(IReportExporter):
         for row_idx, r in enumerate(records, start=2):
             d = r.to_dict()
             ws.append([
-                d["video"], d["frame"], d["categoria"],
+                d["video"], d["frame"], d["agente"], d["categoria"],
                 f"{d['confianca']:.0%}", d["marca"], d["modelo"],
                 d["ano_estimado"], d["cor"], d["placa"],
                 str(d["bbox"]),

@@ -6,12 +6,13 @@ from domain.ports import IVlmAgent
 
 PROMPT = (
     "Analise este veículo e responda SOMENTE em JSON com as chaves: "
-    "marca, modelo, ano_estimado, cor. "
-    'Exemplo: {"marca": "Toyota", "modelo": "Corolla", "ano_estimado": "2020", "cor": "prata"}. '
-    "Se não souber, use null."
+    "marca, modelo, ano_estimado, cor, placa. "
+    'Exemplo: {"marca": "Toyota", "modelo": "Corolla", "ano_estimado": "2020", "cor": "prata", "placa": "ABC1D23"}. '
+    "Para placa: informe somente se visível na imagem, caso contrário use null. "
+    "Se não souber qualquer outro campo, use null."
 )
 
-_EMPTY = {"marca": None, "modelo": None, "ano_estimado": None, "cor": None}
+_EMPTY = {"marca": None, "modelo": None, "ano_estimado": None, "cor": None, "placa": None}
 
 
 class BaseVlmAgent(IVlmAgent):

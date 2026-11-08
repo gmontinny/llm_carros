@@ -3,7 +3,7 @@ from pathlib import Path
 
 from config import get_settings
 from infrastructure.detection.yolo_detector import YoloDetector
-from infrastructure.ocr.easyocr_reader import EasyOcrReader
+from infrastructure.ocr.yolos_plate_reader import YolosPlateOcrReader
 from infrastructure.vlm.factory import create_vlm_agent
 from infrastructure.export.json_exporter import JsonExporter
 from infrastructure.export.xlsx_exporter import XlsxExporter
@@ -18,7 +18,7 @@ OUTPUT_DIR = Path(__file__).parent / "output"
 
 def build_processor() -> VideoProcessor:
     detector = YoloDetector()
-    ocr = EasyOcrReader()
+    ocr = YolosPlateOcrReader()
     vlm = create_vlm_agent()
     analyzer = VehicleAnalyzer(detector, ocr, vlm)
     annotator = FrameAnnotator()

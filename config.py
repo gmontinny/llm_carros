@@ -1,4 +1,6 @@
 from functools import lru_cache
+from typing import Literal
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -18,6 +20,19 @@ class Settings(BaseSettings):
     yolo_model: str = "yolov8n.pt"
     confidence_threshold: float = 0.4
     video_frame_interval: int = 30
+
+    # Device: "cpu" para qualquer máquina | "cuda" para GPU NVIDIA
+    hf_device: Literal["cpu", "cuda"] = "cpu"
+
+    @field_validator("hf_device", mode="before")
+    @classmethod
+    def validate_device(cls, v: str) -> str:
+        import torch
+        v = v.lower()
+        if v == "cuda" and not torch.cuda.is_available():
+            print("[AVISO] CUDA solicitado mas não disponível — usando CPU.")
+            return "cpu"
+        return v
 
     # Classes COCO → categoria de veículo
     @property
