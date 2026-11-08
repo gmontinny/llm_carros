@@ -11,7 +11,7 @@ class YoloDetector(IDetector):
         self._model = YOLO(cfg.yolo_model)
         self._confidence = cfg.confidence_threshold
         self._vehicle_classes = cfg.vehicle_classes
-        self._device = cfg.hf_device  # "cuda" ou "cpu"
+        self._device = cfg.device
 
     def detect(self, frame: np.ndarray) -> list[Detection]:
         results = self._model(frame, conf=self._confidence, device=self._device, verbose=False)[0]

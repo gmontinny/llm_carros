@@ -15,7 +15,7 @@ _MODEL_ID = "nickmuchi/yolos-small-finetuned-license-plate-detection"
 
 class YolosPlateOcrReader(IOcrReader):
     def __init__(self):
-        self._device = get_settings().hf_device
+        self._device = get_settings().device
         self._processor = AutoImageProcessor.from_pretrained(_MODEL_ID)
         self._model = AutoModelForObjectDetection.from_pretrained(_MODEL_ID).to(self._device)
         self._model.eval()

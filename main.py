@@ -14,6 +14,7 @@ from presentation.frame_annotator import FrameAnnotator
 
 VIDEOS_DIR = Path(__file__).parent / "videos"
 OUTPUT_DIR = Path(__file__).parent / "output"
+_VIDEO_EXTENSIONS = (".mp4", ".mov", ".mts", ".avi", ".mkv")
 
 
 def build_processor() -> VideoProcessor:
@@ -27,9 +28,12 @@ def build_processor() -> VideoProcessor:
 
 
 def resolve_videos(args: list[str]) -> list[Path]:
-    all_videos = list(VIDEOS_DIR.glob("*.mp4"))
+    all_videos = [
+        v for v in VIDEOS_DIR.iterdir()
+        if v.suffix.lower() in _VIDEO_EXTENSIONS
+    ]
     if not all_videos:
-        print(f"Nenhum vídeo em {VIDEOS_DIR}")
+        print(f"Nenhum vídeo encontrado em {VIDEOS_DIR} (extensões: {_VIDEO_EXTENSIONS})")
         sys.exit(1)
 
     if not args:

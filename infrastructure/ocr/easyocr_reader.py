@@ -12,7 +12,7 @@ _PLATE_PATTERN = re.compile(r"[A-Z]{3}[\s-]?[0-9][A-Z0-9][0-9]{2}", re.IGNORECAS
 
 class EasyOcrReader(IOcrReader):
     def __init__(self):
-        device = get_settings().hf_device
+        device = get_settings().device
         self._reader = easyocr.Reader(["pt", "en"], gpu=device == "cuda")
 
     def extract_plate(self, image: np.ndarray) -> Optional[str]:

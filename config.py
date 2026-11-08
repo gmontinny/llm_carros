@@ -1,6 +1,5 @@
 from functools import lru_cache
 from typing import Literal
-from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -21,18 +20,19 @@ class Settings(BaseSettings):
     confidence_threshold: float = 0.4
     video_frame_interval: int = 30
 
-    # Device: "cpu" para qualquer máquina | "cuda" para GPU NVIDIA
+    # Device configurado no .env: "cpu" | "cuda"
     hf_device: Literal["cpu", "cuda"] = "cpu"
 
-    @field_validator("hf_device", mode="before")
-    @classmethod
-    def validate_device(cls, v: str) -> str:
+    @property
+    def device(self) -> str:
+        """Resolve o device efetivo em tempo de uso, não na inicialização."""
         import torch
-        v = v.lower()
-        if v == "cuda" and not torch.cuda.is_available():
+        if self.hf_device == "cuda":
+            if torch.cuda.is_available():
+                print(f"[INFO] GPU: {torch.cuda.get_device_name(0)} — CUDA ativo.")
+                return "cuda"
             print("[AVISO] CUDA solicitado mas não disponível — usando CPU.")
-            return "cpu"
-        return v
+        return "cpu"
 
     # Classes COCO → categoria de veículo
     @property

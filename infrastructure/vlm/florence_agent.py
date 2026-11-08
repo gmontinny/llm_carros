@@ -19,7 +19,7 @@ _PROMPT = (
 
 class FlorenceAgent(BaseVlmAgent):
     def __init__(self):
-        device = get_settings().hf_device
+        device = get_settings().device
         self._device = device
         self._processor = AutoProcessor.from_pretrained(_MODEL_ID, trust_remote_code=True)
         self._model = AutoModelForCausalLM.from_pretrained(
